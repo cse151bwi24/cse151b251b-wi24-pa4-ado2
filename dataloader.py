@@ -69,14 +69,14 @@ def prepare_features(args, data, tokenizer, cache_path):
     return all_features
 
 def process_data(args, features, tokenizer):
-  train_size, dev_size = len(features['train']), len(features['validation'])
+    train_size, dev_size = len(features['train']), len(features['validation'])
 
-  datasets = {}
-  for split, feat in features.items():
-      ins_data = feat
-      datasets[split] = IntentDataset(ins_data, tokenizer, split)
+    datasets = {}
+    for split, feat in features.items():
+        ins_data = feat
+        datasets[split] = IntentDataset(ins_data, tokenizer, split)
 
-  return datasets
+    return datasets
 
 class BaseInstance(object):
     def __init__(self, embed_data, example):
