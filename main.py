@@ -19,19 +19,21 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def baseline_train(args, model, datasets, tokenizer):
     criterion = nn.CrossEntropyLoss()  # combines LogSoftmax() and NLLLoss()
     # task1: setup train dataloader
-    train_dataloader = get_dataloader(...)
+    train_dataloader = get_dataloader(datasets['train'], 'train')
 
     # task2: setup model's optimizer_scheduler if you have
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
     
     # task3: write a training loop
     for epoch_count in range(args.n_epochs):
         losses = 0
         model.train()
 
-        for step, batch in progress_bar(...):
-            inputs, labels = prepare_inputs(...)
-            logits = model(...)
-            loss = criterion(...)
+        for step, batch in progress_bar(enumerate(train_dataloader), total=len(train_dataloader)):
+            inputs, labels = prepare_inputs(batch, model)
+            logits = model(inputs, labels)
+            loss = criterion(logits, labels)
             loss.backward()
 
             model.optimizer.step()  # backprop to update the weights
@@ -39,7 +41,7 @@ def baseline_train(args, model, datasets, tokenizer):
             model.zero_grad()
             losses += loss.item()
     
-        run_eval(..., split='validation')
+        run_eval(args, model, datasets, tokenizer, split='validation')
         print('epoch', epoch_count, '| losses:', losses)
   
 def custom_train(args, model, datasets, tokenizer):

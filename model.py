@@ -20,14 +20,14 @@ class IntentModel(nn.Module):
     # task1: add necessary class variables as you wish.
     
     # task2: initilize the dropout and classify layers
-    self.dropout = nn.Dropout(...)
-    self.classify = Classifier(...)
+    self.dropout = nn.Dropout(args.drop_rate)
+    self.classify = Classifier(args, target_size)
     
   def model_setup(self, args):
     print(f"Setting up {args.model} model")
 
     # task1: get a pretrained model of 'bert-base-uncased'
-    self.encoder = BertModel.from_pretrained(...)
+    self.encoder = BertModel.from_pretrained('bert-base-uncased')
     
     self.encoder.resize_token_embeddings(len(self.tokenizer))  # transformer_check
 
@@ -41,6 +41,11 @@ class IntentModel(nn.Module):
     task3:
         feed the output of the dropout layer to the Classifier which is provided for you.
     """
+    outputs = self.encoder(**inputs)
+    hidden = outputs.last_hidden_state[:, 0, :]
+    hidden = self.dropout(hidden)
+    logit = self.classify(hidden)
+    return logit
   
 class Classifier(nn.Module):
   def __init__(self, args, target_size):

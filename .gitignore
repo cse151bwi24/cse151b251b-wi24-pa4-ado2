@@ -1,3 +1,6 @@
 .env
 __pycache__
 assets/
+.vscode/*
+jack.ipynb
+```
