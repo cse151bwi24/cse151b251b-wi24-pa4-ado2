@@ -19,10 +19,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def baseline_train(args, model, datasets, tokenizer):
     criterion = nn.CrossEntropyLoss()  # combines LogSoftmax() and NLLLoss()
     # task1: setup train dataloader
-    train_dataloader = get_dataloader(datasets['train'], 'train')
+    train_dataloader = get_dataloader(args, datasets['train'], split='train')
 
     # task2: setup model's optimizer_scheduler if you have
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.Learning_rate)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
     
     # task3: write a training loop
@@ -36,8 +36,8 @@ def baseline_train(args, model, datasets, tokenizer):
             loss = criterion(logits, labels)
             loss.backward()
 
-            model.optimizer.step()  # backprop to update the weights
-            model.scheduler.step()  # Update learning rate schedule
+            optimizer.step()  # backprop to update the weights
+            scheduler.step()  # Update learning rate schedule
             model.zero_grad()
             losses += loss.item()
     
