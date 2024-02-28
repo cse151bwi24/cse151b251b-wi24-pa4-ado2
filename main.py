@@ -53,6 +53,7 @@ def custom_train(args, model, datasets, tokenizer):
     # task3: write a training loop
 
 def run_eval(args, model, datasets, tokenizer, split='validation'):
+    criterion = nn.CrossEntropyLoss()
     model.eval()
     dataloader = get_dataloader(args, datasets[split], split)
 
