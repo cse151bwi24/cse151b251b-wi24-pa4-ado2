@@ -56,15 +56,19 @@ def run_eval(args, model, datasets, tokenizer, split='validation'):
     model.eval()
     dataloader = get_dataloader(args, datasets[split], split)
 
+    losses = 0
+
     acc = 0
     for step, batch in progress_bar(enumerate(dataloader), total=len(dataloader)):
         inputs, labels = prepare_inputs(batch, model)
         logits = model(inputs, labels)
-        
+        loss = criterion(logits, labels)
+        loss.backward()
         tem = (logits.argmax(1) == labels).float().sum()
         acc += tem.item()
+        losses += loss.item()
   
-    print(f'{split} acc:', acc/len(datasets[split]), f'|dataset split {split} size:', len(datasets[split]))
+    print(f'{split} acc:', acc/len(datasets[split]), f'{split} loss:', losses, f'|dataset split {split} size:', len(datasets[split]))
 
 def supcon_train(args, model, datasets, tokenizer):
     from loss import SupConLoss
