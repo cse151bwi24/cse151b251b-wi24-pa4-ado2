@@ -46,7 +46,7 @@ def params():
                 help="Model learning rate starting point.")
     parser.add_argument("--hidden-dim", default=10, type=int,
                 help="Model hidden dimension.")
-    parser.add_argument("--drop-rate", default=0.9, type=float,
+    parser.add_argument("--drop-rate", default=0.1, type=float,
                 help="Dropout rate for model training")
     parser.add_argument("--embed-dim", default=768, type=int,
                 help="The embedding dimension of pretrained LM.")
