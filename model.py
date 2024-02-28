@@ -62,10 +62,36 @@ class Classifier(nn.Module):
 
 
 class CustomModel(IntentModel):
-    def __init__(self, args, tokenizer, target_size):
+    def __init__(self, args, tokenizer, target_size, reinit_n_layers=0):
         super().__init__(args, tokenizer, target_size)
+        self.tokenizer = tokenizer
+        self.model_setup(args)
+        self.target_size = target_size
+
+        # task1: add necessary class variables as you wish.
+        self.reinit_n_layers = reinit_n_layers
+        if reinit_n_layers > 0:
+            self._do_reinit(self.encoder, reinit_n_layers)
+
+        # task2: initilize the dropout and classify layers
+        self.dropout = nn.Dropout(args.drop_rate)
+        self.classify = Classifier(args, target_size)
+
+    
     
     # task1: use initialization for setting different strategies/techniques to better fine-tune the BERT model
+    def _init_weight_and_bias(self, module):                        
+        if isinstance(module, nn.Linear):
+            module.weight.data.normal_(mean=0.0, std=self.encoder.config.initializer_range)
+            if module.bias is not None:
+                module.bias.data.zero_()
+        elif isinstance(module, nn.LayerNorm):
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0) 
+
+    def _do_reinit(self, model, reinit_n_layers):
+        for i in range(reinit_n_layers):
+            model.encoder.layer[-(i+1)].apply(self._init_weight_and_bias)  
 
 class SupConModel(IntentModel):
     def __init__(self, args, tokenizer, target_size, feat_dim=768):
