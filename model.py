@@ -96,17 +96,30 @@ class CustomModel(IntentModel):
 class SupConModel(IntentModel):
     def __init__(self, args, tokenizer, target_size, feat_dim=768):
         super().__init__(args, tokenizer, target_size)
+        self.head = nn.Linear(feat_dim, target_size)
 
     # task1: initialize a linear head layer
- 
-    #def forward(self, inputs, targets):
+     
+    def forward(self, inputs, targets):
+        """
+        task1: 
+            feeding the input to the encoder, 
+        task2: 
+            take the last_hidden_state's <CLS> token as output of the
+            encoder, feed it to a drop_out layer with the preset dropout rate in the argparse argument, 
+        task3:
+            feed the normalized output of the dropout layer to the linear head layer; return the embedding
+        """
+        outputs = self.encoder(**inputs)
+        hidden = outputs.last_hidden_state[:, 0, :]
+        #first dropout for contrastive learning
+        hidden1 = self.dropout(hidden)
+        #second dropout for contrastive learning
+        hidden2 = self.dropout(hidden)
+        #normalize the hidden states
+        feature1 = F.normalize(self.head(hidden1), p=2, dim=1)
+        feature2 = F.normalize(self.head(hidden2), p=2, dim=1)
+        #concatenate the two normalized hidden states so that it has shape [batchsize, 2, 768]
+        features = torch.cat([feature1.unsqueeze(1), feature2.unsqueeze(1)], dim=1)
 
-    #"""
-   # task1: 
-    #    feeding the input to the encoder, 
-    #task2: 
-    #    take the last_hidden_state's <CLS> token as output of the
-    #    encoder, feed it to a drop_out layer with the preset dropout rate in the argparse argument, 
-    #task3:
-    #    feed the normalized output of the dropout layer to the linear head layer; return the embedding
-    #"""
+        return features
