@@ -127,7 +127,7 @@ if __name__ == "__main__":
         baseline_train(args, model, datasets, tokenizer)
         run_eval(args, model, datasets, tokenizer, split='test')
     elif args.task == 'custom': # you can have multiple custom task for different techniques
-        model = CustomModel(args, tokenizer, target_size=60).to(device)
+        model = CustomModel(args, tokenizer, target_size=60, reinit_n_layers=args.reinit_n_layers).to(device)
         run_eval(args, model, datasets, tokenizer, split='validation')
         run_eval(args, model, datasets, tokenizer, split='test')
         custom_train(args, model, datasets, tokenizer)

@@ -67,9 +67,9 @@ class CustomModel(IntentModel):
         self.tokenizer = tokenizer
         self.model_setup(args)
         self.target_size = target_size
+        print(reinit_n_layers)
 
         # task1: add necessary class variables as you wish.
-        self.reinit_n_layers = reinit_n_layers
         if reinit_n_layers > 0:
             self._do_reinit(self.encoder, reinit_n_layers)
 
@@ -91,7 +91,7 @@ class CustomModel(IntentModel):
 
     def _do_reinit(self, model, reinit_n_layers):
         for i in range(reinit_n_layers):
-            model.encoder.layer[-(i+1)].apply(self._init_weight_and_bias)  
+            model.encoder.layer[-(i+1)].apply(self._init_weight_and_bias) 
 
 class SupConModel(IntentModel):
     def __init__(self, args, tokenizer, target_size, feat_dim=768):
