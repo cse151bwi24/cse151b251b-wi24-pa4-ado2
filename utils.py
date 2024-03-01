@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import random
 import re
-
+import matplotlib.pyplot as plt
 
 
 def check_directories(args):
@@ -48,4 +48,13 @@ def setup_gpus(args):
     return args
 
 
-
+def plot(train_acc, val_acc, s_dir='plots'):
+    epochs = range(1, len(train_acc) + 1)
+    plt.plot(epochs, train_acc, label='Train Accuracy')
+    plt.plot(epochs, val_acc, label='Validation Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.title('Train and Validation Accuracy')
+    plt.legend()
+    
+    plt.savefig(os.path.join(s_dir, 'accuracy.png'))

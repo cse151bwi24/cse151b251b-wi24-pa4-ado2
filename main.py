@@ -7,7 +7,7 @@ import math
 
 from tqdm import tqdm as progress_bar
 
-from utils import set_seed, setup_gpus, check_directories
+from utils import set_seed, setup_gpus, check_directories, plotGraph
 from dataloader import get_dataloader, check_cache, prepare_features, process_data, prepare_inputs
 from load import load_data, load_tokenizer
 from arguments import params
@@ -18,7 +18,7 @@ from transformers import get_linear_schedule_with_warmup
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def baseline_train(args, model, datasets, tokenizer):
+def baseline_train(args, model, datasets, tokenizer, plot=False):
     criterion = nn.CrossEntropyLoss()  # combines LogSoftmax() and NLLLoss()
     # task1: setup train dataloader
     train_dataloader = get_dataloader(args, datasets['train'], split = 'train')
@@ -26,10 +26,13 @@ def baseline_train(args, model, datasets, tokenizer):
     # task2: setup model's optimizer_scheduler if you have
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+
+    # list to store accuracy and loss
+    train_accs, val_accs = [], []
     
     # task3: write a training loop
     for epoch_count in range(args.n_epochs):
-        losses = 0
+        acc, losses = 0, 0
         model.train()
 
         for step, batch in progress_bar(enumerate(train_dataloader), total=len(train_dataloader)):
@@ -38,15 +41,27 @@ def baseline_train(args, model, datasets, tokenizer):
             loss = criterion(logits, labels)
             loss.backward()
 
+            tem = (logits.argmax(1) == labels).float().sum()
+            acc += tem.item()
+
             optimizer.step()  # backprop to update the weights
             scheduler.step()  # Update learning rate schedule
             model.zero_grad()
             losses += loss.item()
     
-        run_eval(args, model, datasets, tokenizer, split='validation')
-        print('epoch', epoch_count, '| losses:', losses)
+        val_acc = run_eval(args, model, datasets, tokenizer, split='validation')
+        train_acc = acc/len(datasets['train'])
+        print('epoch', epoch_count, '| losses:', losses, '| train acc:', acc/len(datasets['train']))
+
+        train_accs.append(train_acc)
+        val_accs.append(val_acc)
+    
+    if plot:
+        if not os.path.exists('plots'):
+            os.mkdir('plots')
+        plotGraph(train_accs, val_accs,  s_dir='plots')
   
-def custom_train(args, model, datasets, tokenizer):
+def custom_train(args, model, datasets, tokenizer, plot=False):
     criterion = nn.CrossEntropyLoss()  # combines LogSoftmax() and NLLLoss()
     # task1: setup train dataloader
     train_dataloader = get_dataloader(args, datasets['train'], split = 'train')
@@ -55,9 +70,12 @@ def custom_train(args, model, datasets, tokenizer):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * args.n_epochs)
     
+    # list to store accuracy and loss
+    train_accs, val_accs = [], []
+
     # task3: write a training loop
     for epoch_count in range(args.n_epochs):
-        losses = 0
+        losses, acc = 0, 0
         model.train()
 
         for step, batch in progress_bar(enumerate(train_dataloader), total=len(train_dataloader)):
@@ -66,13 +84,25 @@ def custom_train(args, model, datasets, tokenizer):
             loss = criterion(logits, labels)
             loss.backward()
 
+            tem = (logits.argmax(1) == labels).float().sum()
+            acc += tem.item()
+
             optimizer.step()  # backprop to update the weights
             scheduler.step()  # Update learning rate schedule
             model.zero_grad()
             losses += loss.item()
     
-        run_eval(args, model, datasets, tokenizer, split='validation')
+        val_acc = run_eval(args, model, datasets, tokenizer, split='validation')
+        train_acc = acc/len(datasets['train'])
         print('epoch', epoch_count, '| losses:', losses)
+
+        train_accs.append(train_acc)
+        val_accs.append(val_acc)
+
+    if plot:
+        if not os.path.exists('plots'):
+            os.mkdir('plots')
+        plotGraph(train_accs, val_accs,  s_dir='plots')
 
 def run_eval(args, model, datasets, tokenizer, split='validation'):
     criterion = nn.CrossEntropyLoss() 
@@ -91,6 +121,8 @@ def run_eval(args, model, datasets, tokenizer, split='validation'):
         losses += loss.item()
   
     print(f'{split} acc:', acc/len(datasets[split]), f'{split} loss:', losses, f'|dataset split {split} size:', len(datasets[split]))
+
+    return acc/len(datasets[split])
 
 def supcon_train(args, model, datasets, tokenizer):
     from loss import SupConLoss
