@@ -56,6 +56,13 @@ def params():
                 help="Total number of training epochs to perform.")
     parser.add_argument("--max-len", default=20, type=int,
                 help="maximum sequence length to look back")
+    parser.add_argument("--contrast_n_epochs", default=10, type=int,
+                help="number of epochs for contrastive learning")
+    parser.add_argument("--contrast_learning_rate", default=1e-4, type=int,
+                help="learning rate for contrastive learning")
+    parser.add_argument("--slimCLR", default=False, type=bool,
+                help="whether to use slimCLR or not")
+    
 
     args = parser.parse_args()
     return args
