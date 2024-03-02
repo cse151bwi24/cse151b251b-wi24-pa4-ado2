@@ -58,7 +58,7 @@ def params():
                 help="maximum sequence length to look back")
     parser.add_argument("--contrast_n_epochs", default=10, type=int,
                 help="number of epochs for contrastive learning")
-    parser.add_argument("--contrast_learning_rate", default=1e-4, type=int,
+    parser.add_argument("--contrast_learning_rate", default=1e-4, type=float,
                 help="learning rate for contrastive learning")
     parser.add_argument("--slimCLR", default=False, type=bool,
                 help="whether to use slimCLR or not")
