@@ -141,13 +141,31 @@ def supcon_train(args, model, datasets, tokenizer):
         model.train()
         for step, batch in progress_bar(enumerate(train_dataloader), total=len(train_dataloader)):
             inputs, labels = prepare_inputs(batch, model)
-            features = model(inputs, labels)
+            features = model(inputs, labels, contrastive=True)
             loss = criterion(features, labels)
             loss.backward()
             optimizer.step()
             losses += loss.item()
         #print statements
-        print('epoch', epoch_count, '| losses:', losses)
+        print('contrastive','epoch', epoch_count, '| losses:', losses)
+
+    # freeze contrastive layers and train the classifier
+    model.freeze_contrastive()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * args.n_epochs)
+    for epoch_count in range(args.n_epochs):
+        losses = 0
+        model.train()
+        for step, batch in progress_bar(enumerate(train_dataloader), total=len(train_dataloader)):
+            inputs, labels = prepare_inputs(batch, model)
+            logits = model(inputs, labels)
+            loss = criterion(logits, labels)
+            loss.backward()
+            optimizer.step()
+            losses += loss.item()
+        #print statements
+        print('normal','epoch', epoch_count, '| losses:', losses)
 
 if __name__ == "__main__":
     args = params()
