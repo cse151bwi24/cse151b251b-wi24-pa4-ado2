@@ -94,7 +94,7 @@ def custom_train(args, model, datasets, tokenizer, plot=False):
     
         val_acc = run_eval(args, model, datasets, tokenizer, split='validation')
         train_acc = acc/len(datasets['train'])
-        print('epoch', epoch_count, '| losses:', losses)
+        print('epoch', epoch_count, '| losses:', losses, '| train acc:', acc/len(datasets['train']))
 
         train_accs.append(train_acc)
         val_accs.append(val_acc)
@@ -173,7 +173,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
             optimizer.step()
             losses += loss.item()
         #print statements
-        print('normal','epoch', epoch_count, '| losses:', losses)
+        print('normal','epoch', epoch_count, '| losses:', losses, '| train acc:', acc/len(datasets['train']))
         val_acc = run_eval(args, model, datasets, tokenizer, split='validation')
         train_acc = acc/len(datasets['train'])
 
