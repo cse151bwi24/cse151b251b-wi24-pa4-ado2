@@ -132,11 +132,11 @@ def supcon_train(args, model, datasets, tokenizer):
     train_dataloader = get_dataloader(args, datasets['train'], split='train')
     
     # task2: setup optimizer_scheduler in your model
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.contrast_learning_rate)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
     # task3: write a training loop for SupConLoss function 
-    for epoch_count in range(args.n_epochs):
+    for epoch_count in range(args.contrast_n_epochs):
         losses = 0
         model.train()
         for step, batch in progress_bar(enumerate(train_dataloader), total=len(train_dataloader)):
