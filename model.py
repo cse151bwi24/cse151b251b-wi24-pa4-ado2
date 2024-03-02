@@ -96,11 +96,31 @@ class CustomModel(IntentModel):
 class SupConModel(IntentModel):
     def __init__(self, args, tokenizer, target_size, feat_dim=768):
         super().__init__(args, tokenizer, target_size)
-        self.head = nn.Linear(feat_dim, target_size)
 
-    # task1: initialize a linear head layer
-     
-    def forward(self, inputs, targets):
+        # task1: initialize a linear head layer
+        # this linear head is to be dropped after the contrastive learning is done. 
+        self.head = nn.Linear(feat_dim, feat_dim)
+        
+        # this classifier is to be used for downstream tasks
+        self.classify = nn.Linear(feat_dim, target_size)
+        # this dropout layer is to be used for contrastive learning for different augmentations
+        self.dropout = nn.Dropout(args.drop_rate)
+    
+    def freeze_contrastive(self):
+        # task1: freeze the encoder and the linear head layer
+        for param in self.encoder.parameters():
+            param.requires_grad = False
+        for param in self.head.parameters():
+            param.requires_grad = False
+        for param in self.dropout.parameters():
+            param.requires_grad = False
+        for param in self.classify.parameters():
+            param.requires_grad = True
+        self.classify.train()
+
+ 
+    def forward(self, inputs, targets, contrastive=False):
+
         """
         task1: 
             feeding the input to the encoder, 
@@ -110,16 +130,23 @@ class SupConModel(IntentModel):
         task3:
             feed the normalized output of the dropout layer to the linear head layer; return the embedding
         """
-        outputs = self.encoder(**inputs)
-        hidden = outputs.last_hidden_state[:, 0, :]
-        #first dropout for contrastive learning
-        hidden1 = self.dropout(hidden)
-        #second dropout for contrastive learning
-        hidden2 = self.dropout(hidden)
-        #normalize the hidden states
-        feature1 = F.normalize(self.head(hidden1), p=2, dim=1)
-        feature2 = F.normalize(self.head(hidden2), p=2, dim=1)
-        #concatenate the two normalized hidden states so that it has shape [batchsize, 2, 768]
-        features = torch.cat([feature1.unsqueeze(1), feature2.unsqueeze(1)], dim=1)
-
-        return features
+        if contrastive:
+            outputs = self.encoder(**inputs)
+            hidden = outputs.last_hidden_state[:, 0, :]
+            #first dropout for contrastive learning
+            hidden1 = self.dropout(hidden)
+            #second dropout for contrastive learning
+            hidden2 = self.dropout(hidden)
+            #normalize the hidden states
+            feature1 = F.normalize(hidden1, p=2, dim=1)
+            feature2 = F.normalize(hidden2, p=2, dim=1)
+            #concatenate the two normalized hidden states so that it has shape [batchsize, 2, 768]
+            features = torch.cat([feature1.unsqueeze(1), feature2.unsqueeze(1)], dim=1)
+            embedding = self.head(features)
+            return embedding
+        
+        else:
+            outputs = self.encoder(**inputs)
+            hidden = outputs.last_hidden_state[:, 0, :]
+            logit = self.classify(hidden)
+            return logit
