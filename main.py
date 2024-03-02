@@ -124,7 +124,7 @@ def run_eval(args, model, datasets, tokenizer, split='validation'):
 
     return acc/len(datasets[split])
 
-def supcon_train(args, model, datasets, tokenizer):
+def supcon_train(args, model, datasets, tokenizer, plot=False):
     from loss import SupConLoss
     criterion = SupConLoss(temperature=args.temperature)
 
@@ -154,6 +154,10 @@ def supcon_train(args, model, datasets, tokenizer):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * args.n_epochs)
+
+    # List for storing accuracy and loss
+    train_accs, val_accs = [], []
+
     for epoch_count in range(args.n_epochs):
         losses = 0
         model.train()
@@ -162,10 +166,24 @@ def supcon_train(args, model, datasets, tokenizer):
             logits = model(inputs, labels)
             loss = criterion(logits, labels)
             loss.backward()
+
+            tem = (logits.argmax(1) == labels).float().sum()
+            acc += tem.item()
+
             optimizer.step()
             losses += loss.item()
         #print statements
         print('normal','epoch', epoch_count, '| losses:', losses)
+        val_acc = run_eval(args, model, datasets, tokenizer, split='validation')
+        train_acc = acc/len(datasets['train'])
+
+        train_accs.append(train_acc)
+        val_accs.append(val_acc)
+
+    if plot:
+        if not os.path.exists('plots'):
+            os.mkdir('plots')
+        plotGraph(train_accs, val_accs,  s_dir='plots')
 
 if __name__ == "__main__":
     args = params()
