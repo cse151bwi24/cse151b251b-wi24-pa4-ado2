@@ -102,7 +102,7 @@ class SupConModel(IntentModel):
         self.head = nn.Linear(feat_dim, feat_dim)
         
         # this classifier is to be used for downstream tasks
-        self.classify = nn.Linear(feat_dim, target_size)
+        self.classify = Classifier(args, target_size)
         # this dropout layer is to be used for contrastive learning for different augmentations
         self.dropout = nn.Dropout(args.drop_rate)
     
