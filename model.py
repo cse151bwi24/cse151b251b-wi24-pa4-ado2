@@ -96,7 +96,6 @@ class CustomModel(IntentModel):
 class SupConModel(IntentModel):
     def __init__(self, args, tokenizer, target_size, feat_dim=768):
         super().__init__(args, tokenizer, target_size)
-
         # task1: initialize a linear head layer
         # this linear head is to be dropped after the contrastive learning is done. 
         self.head = nn.Linear(feat_dim, feat_dim)
@@ -105,6 +104,7 @@ class SupConModel(IntentModel):
         self.classify = Classifier(args, target_size)
         # this dropout layer is to be used for contrastive learning for different augmentations
         self.dropout = nn.Dropout(args.drop_rate)
+        
     
     def freeze_contrastive(self):
         # task1: freeze the encoder and the linear head layer
@@ -141,12 +141,13 @@ class SupConModel(IntentModel):
             feature1 = F.normalize(hidden1, p=2, dim=1)
             feature2 = F.normalize(hidden2, p=2, dim=1)
             #concatenate the two normalized hidden states so that it has shape [batchsize, 2, 768]
-            features = torch.cat([feature1.unsqueeze(1), feature2.unsqueeze(1)], dim=1)
+            features = torch.cat([feature1.unsqueeze(1), feature1.unsqueeze(1)], dim=1)
             embedding = self.head(features)
             return embedding
         
         else:
             outputs = self.encoder(**inputs)
             hidden = outputs.last_hidden_state[:, 0, :]
+            hidden = self.dropout(hidden)
             logit = self.classify(hidden)
             return logit

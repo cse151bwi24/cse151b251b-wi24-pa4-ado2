@@ -133,9 +133,10 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
     
     # task2: setup optimizer_scheduler in your model
     optimizer = torch.optim.Adam(model.parameters(), lr=args.contrast_learning_rate)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * args.contrast_n_epochs)
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * 10)
 
     # task3: write a training loop for SupConLoss function 
+    earlystop_loss = np.inf
     for epoch_count in range(args.contrast_n_epochs):
         losses = 0
         model.train()
@@ -147,6 +148,13 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
             optimizer.step()
             scheduler.step()
             losses += loss.item()
+            model.zero_grad()
+            
+        if earlystop_loss < losses:
+            print("early stopped: ",'contrastive','epoch', epoch_count, '| losses:', losses)
+      
+            break
+        earlystop_loss = losses
         #print statements
         print('contrastive','epoch', epoch_count, '| losses:', losses)
 
@@ -173,6 +181,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
             
             optimizer.step()
             scheduler.step()
+            model.zero_grad()
             losses += loss.item()
         #print statements
         print('normal','epoch', epoch_count, '| losses:', losses, '| train acc:', acc/len(datasets['train']))
