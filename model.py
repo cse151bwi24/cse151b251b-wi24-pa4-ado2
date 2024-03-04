@@ -138,10 +138,13 @@ class SupConModel(IntentModel):
             #second dropout for contrastive learning
             hidden2 = self.dropout(hidden)
             #normalize the hidden states
-            feature1 = F.normalize(hidden1, p=2, dim=1)
-            feature2 = F.normalize(hidden2, p=2, dim=1)
+            feature1 = self.head(F.normalize(hidden1, p=2, dim=1))
+            feature2 = self.head(F.normalize(hidden2, p=2, dim=1))
             #concatenate the two normalized hidden states so that it has shape [batchsize, 2, 768]
             features = torch.cat([feature1.unsqueeze(1), feature1.unsqueeze(1)], dim=1)
+            return features
+        
+            #might not be needed
             embedding = self.head(features)
             return embedding
         

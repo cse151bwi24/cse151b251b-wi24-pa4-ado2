@@ -137,6 +137,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
 
     # task3: write a training loop for SupConLoss function 
     earlystop_loss = np.inf
+    early_count = 0
     for epoch_count in range(args.contrast_n_epochs):
         losses = 0
         model.train()
@@ -151,9 +152,12 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
             model.zero_grad()
             
         if earlystop_loss < losses:
-            print("early stopped: ",'contrastive','epoch', epoch_count, '| losses:', losses)
-      
-            break
+            early_count += 1
+            if early_count > 3:
+                print("early stopped: ",'contrastive','epoch', epoch_count, '| losses:', losses)
+                break
+        else:
+            early_count = 0
         earlystop_loss = losses
         #print statements
         print('contrastive','epoch', epoch_count, '| losses:', losses)
@@ -230,3 +234,4 @@ if __name__ == "__main__":
     elif args.task == 'supcon':
         model = SupConModel(args, tokenizer, target_size=60).to(device)
         supcon_train(args, model, datasets, tokenizer)
+        run_eval(args, model, datasets, tokenizer, split='test')
