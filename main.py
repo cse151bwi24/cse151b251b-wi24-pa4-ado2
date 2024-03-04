@@ -133,7 +133,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
     
     # task2: setup optimizer_scheduler in your model
     optimizer = torch.optim.Adam(model.parameters(), lr=args.contrast_learning_rate)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * args.contrast_n_epochs)
 
     # task3: write a training loop for SupConLoss function 
     for epoch_count in range(args.contrast_n_epochs):
@@ -145,6 +145,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
             loss = criterion(features, labels)
             loss.backward()
             optimizer.step()
+            scheduler.step()
             losses += loss.item()
         #print statements
         print('contrastive','epoch', epoch_count, '| losses:', losses)
@@ -166,11 +167,12 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
             logits = model(inputs, labels)
             loss = criterion(logits, labels)
             loss.backward()
-
+            
             tem = (logits.argmax(1) == labels).float().sum()
             acc += tem.item()
-
+            
             optimizer.step()
+            scheduler.step()
             losses += loss.item()
         #print statements
         print('normal','epoch', epoch_count, '| losses:', losses, '| train acc:', acc/len(datasets['train']))
@@ -184,6 +186,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
         if not os.path.exists('plots'):
             os.mkdir('plots')
         plotGraph(train_accs, val_accs,  s_dir='plots')
+
 
 if __name__ == "__main__":
     args = params()
