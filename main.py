@@ -236,5 +236,5 @@ if __name__ == "__main__":
         run_eval(args, model, datasets, tokenizer, split='test')
     elif args.task == 'supcon':
         model = SupConModel(args, tokenizer, target_size=60).to(device)
-        supcon_train(args, model, datasets, tokenizer)
+        supcon_train(args, model, datasets, tokenizer, plot=True)
         run_eval(args, model, datasets, tokenizer, split='test')
