@@ -133,7 +133,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
     
     # task2: setup optimizer_scheduler in your model
     optimizer = torch.optim.Adam(model.parameters(), lr=args.contrast_learning_rate)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * 10)
+    #scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * 10)
 
     # task3: write a training loop for SupConLoss function 
     earlystop_loss = np.inf
@@ -144,10 +144,13 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
         for step, batch in progress_bar(enumerate(train_dataloader), total=len(train_dataloader)):
             inputs, labels = prepare_inputs(batch, model)
             features = model(inputs, labels, contrastive=True)
-            loss = criterion(features, labels)
+            if args.slimCLR:
+                loss = criterion(features, labels)
+            else:
+                loss = criterion(features)
             loss.backward()
             optimizer.step()
-            scheduler.step()
+            #scheduler.step()
             losses += loss.item()
             model.zero_grad()
             
@@ -166,7 +169,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
     model.freeze_contrastive()
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * args.n_epochs)
+#     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=50, num_training_steps=len(train_dataloader) * args.n_epochs)
 
     # List for storing accuracy and loss
     train_accs, val_accs = [], []
@@ -184,7 +187,7 @@ def supcon_train(args, model, datasets, tokenizer, plot=False):
             acc += tem.item()
             
             optimizer.step()
-            scheduler.step()
+            #scheduler.step()
             model.zero_grad()
             losses += loss.item()
         #print statements

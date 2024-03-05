@@ -10,7 +10,7 @@ def params():
                       tune is advanced techiques to fine-tune bert;\n\
                       constast is contrastive learning method")
                       #choices=['baseline','tune','supcon'])
-    parser.add_argument("--temperature", default=0.7, type=int, 
+    parser.add_argument("--temperature", default=0.07, type=int, 
                 help="temperature parameter for contrastive loss")
 
     # optional fine-tuning techiques parameters
