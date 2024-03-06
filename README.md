@@ -1,8 +1,11 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/AL4k43eR)
-# PA4 - Transformers for Amazon intent classification
+# PA4-Instructions
+1. To run the model, cd to the folder where the model is located then write `bash run.sh` 
+2. The default hyperparameters for the model are in arguments.py
+3. To change these hyperparameters to your own liking, create a new line in run.sh starting with `python main.py`
+4. Let's say for example you wanted to create to make the number of reinitialization layers 4 and number of epochs 10 in the custom model. In that case you would make a new line in run.sh and write `python main.py --n-epochs 10 --do-train --task custom --reinit_n_layers 4`
+5. Comment out all the other lines besides the line you want to run in run.sh
+6. If you want to generate a plot, scroll to the bottom of main.py and set the hyperparameter `plot = True` for the task you are running.
 
-## Please refer the PA4 pdf for instructions!
+Our team name is cse151b251b-wi24-pa4-ado2 <br />
+Our github repo is linked [here](https://github.com/cse151bwi24/cse151b251b-wi24-pa4-ado2)
 
-### You are free to create new functions, change existing function signatures, add/remove member variables/functions, change returns of a function in the provided start code but you need to maintain the overall given structure of the code.
-
-### We have broken down sections to be implemented by you as tasks for your convenience.
